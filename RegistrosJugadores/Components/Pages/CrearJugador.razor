@@ -1,6 +1,10 @@
 ﻿@page "/Crear/Jugador"
+@using Microsoft.Data.SqlClient
+@using Microsoft.EntityFrameworkCore
 @inject JugadoresServices jugadoresServices
+@inject NavigationManager navigationManager
 @rendermode InteractiveServer
+
 
 @*HTML*@
 <PageTitle>Crear</PageTitle>
@@ -22,20 +26,20 @@
                 @*NombreJugador*@
                 <div class="mb-3">
                     <label class="form-label"><strong>Nombre</strong></label>
-                    <InputText class="form-control" @bind-Value="jugadores.Nombre" readonly></InputText>
-                    <ValidationMessage For="(() => jugadores.Nombre)"/>
+                    <InputText class="form-control" @bind-Value="jugadores.Nombre"></InputText>
+                    <ValidationMessage For="(() => jugadores.Nombre)" />
 
                 </div>
                 @*Partidas*@
                 <div class="mb-3">
                     <label class="form-label"><strong>Partidas</strong></label>
-                    <InputNumber class="form-control" @bind-Value="jugadores.Partidas" readonly></InputNumber>
+                    <InputNumber class="form-control" @bind-Value="jugadores.Partidas"></InputNumber>
                     <ValidationMessage For="(() => jugadores.Partidas)" />
                 </div>
             </div>
 
             @*footer*@
-            <div class="card-footer text-bg-danger-center mt-2">
+            <div class="card-footer text-center mt-2">
                 <a href="/Crear/Jugador" class="btn btn-secondary"> <span class="bi bi-arrow-left"></span> Volver</a>
                 <button type="submit" class="btn btn-primary bi bi-floppy">Guardar</button>
             </div>
@@ -46,7 +50,50 @@
 </EditForm>
 
 @code {
-    public Jugadores jugadores { get; set; } = new Jugadores;
+    public Jugadores jugadores { get; set; } = new();
+    public String Nombre { get; set; } = string.Empty;
+    public String Mensaje { get; set; } = string.Empty;
 
-    public void Guardar() { }
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
+
+
+    public async Task Guardar()
+    {
+
+        try
+        {
+            var creado = await jugadoresServices.Guardar(jugadores);
+
+            if (creado)
+            {
+                navigationManager.NavigateTo("/Index/Jugadores");
+
+            }
+            else
+            {
+                Mensaje = "No se pudo guardar correctamente";
+
+            }
+        }
+        catch (DbUpdateException ex)
+        {
+
+            if (ex.InnerException is SqlException sqlex &&
+            (sqlex.Number == 2601 || sqlex.Number == 2627))
+            {
+
+                Mensaje = "Ya existe un jugador con ese nombre";
+            }
+            else
+            {
+
+                Mensaje = "Ha ocurrido un error al guardar";
+            }
+
+        }
+
+    }
 }
