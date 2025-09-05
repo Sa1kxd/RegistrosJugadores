@@ -5,7 +5,7 @@ namespace RegistrosJugadores.Models
     public class Jugadores
     {
         [Key]
-        public int JugadoresId { get; set; }
+        public int JugadorId { get; set; }
         
         [Required(ErrorMessage = "Este campo es requerido")]
 
