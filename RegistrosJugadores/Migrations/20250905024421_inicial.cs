@@ -14,14 +14,14 @@ namespace RegistrosJugadores.Migrations
                 name: "Jugadores",
                 columns: table => new
                 {
-                    JugadoresId = table.Column<int>(type: "int", nullable: false)
+                    JugadorId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Partidas = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Jugadores", x => x.JugadoresId);
+                    table.PrimaryKey("PK_Jugadores", x => x.JugadorId);
                 });
         }
 

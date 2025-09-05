@@ -11,7 +11,7 @@ using RegistrosJugadores.DAL;
 namespace RegistrosJugadores.Migrations
 {
     [DbContext(typeof(Contexto))]
-    [Migration("20250905005654_inicial")]
+    [Migration("20250905024421_inicial")]
     partial class inicial
     {
         /// <inheritdoc />
@@ -26,11 +26,11 @@ namespace RegistrosJugadores.Migrations
 
             modelBuilder.Entity("RegistrosJugadores.Models.Jugadores", b =>
                 {
-                    b.Property<int>("JugadoresId")
+                    b.Property<int>("JugadorId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("JugadoresId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("JugadorId"));
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -39,7 +39,7 @@ namespace RegistrosJugadores.Migrations
                     b.Property<int>("Partidas")
                         .HasColumnType("int");
 
-                    b.HasKey("JugadoresId");
+                    b.HasKey("JugadorId");
 
                     b.ToTable("Jugadores");
                 });
