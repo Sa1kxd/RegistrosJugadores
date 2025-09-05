@@ -1,5 +1,52 @@
-﻿<h3>CrearJugador</h3>
+﻿@page "/Crear/Jugador"
+@inject JugadoresServices jugadoresServices
+@rendermode InteractiveServer
+
+@*HTML*@
+<PageTitle>Crear</PageTitle>
+<EditForm Model="jugadores" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+
+    <div class="container">
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <h5 class="card-title">Crear jugador</h5>
+            </div>
+            <div class="card-body">
+
+                @*JugadorId*@
+                <div class="mb-3">
+                    <label class="form-label"> <strong>JugadorId</strong></label>
+                    <InputNumber class="form-control" @bind-Value="jugadores.JugadorId" readonly></InputNumber>
+                </div>
+                @*NombreJugador*@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Nombre</strong></label>
+                    <InputText class="form-control" @bind-Value="jugadores.Nombre" readonly></InputText>
+                    <ValidationMessage For="(() => jugadores.Nombre)"/>
+
+                </div>
+                @*Partidas*@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Partidas</strong></label>
+                    <InputNumber class="form-control" @bind-Value="jugadores.Partidas" readonly></InputNumber>
+                    <ValidationMessage For="(() => jugadores.Partidas)" />
+                </div>
+            </div>
+
+            @*footer*@
+            <div class="card-footer text-bg-danger-center mt-2">
+                <a href="/Crear/Jugador" class="btn btn-secondary"> <span class="bi bi-arrow-left"></span> Volver</a>
+                <button type="submit" class="btn btn-primary bi bi-floppy">Guardar</button>
+            </div>
+        </div>
+
+    </div>
+
+</EditForm>
 
 @code {
+    public Jugadores jugadores { get; set; } = new Jugadores;
 
+    public void Guardar() { }
 }
