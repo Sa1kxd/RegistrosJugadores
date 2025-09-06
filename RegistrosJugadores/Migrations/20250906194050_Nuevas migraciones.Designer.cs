@@ -11,8 +11,8 @@ using RegistrosJugadores.DAL;
 namespace RegistrosJugadores.Migrations
 {
     [DbContext(typeof(Contexto))]
-    [Migration("20250905024421_inicial")]
-    partial class inicial
+    [Migration("20250906194050_Nuevas migraciones")]
+    partial class Nuevasmigraciones
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,12 +34,15 @@ namespace RegistrosJugadores.Migrations
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Partidas")
                         .HasColumnType("int");
 
                     b.HasKey("JugadorId");
+
+                    b.HasIndex("Nombre")
+                        .IsUnique();
 
                     b.ToTable("Jugadores");
                 });
