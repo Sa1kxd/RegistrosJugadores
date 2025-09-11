@@ -1,0 +1,132 @@
+﻿@page "/Jugador/Edit/{JugadorId:int}"
+@using Microsoft.Data.SqlClient
+@using Microsoft.EntityFrameworkCore
+@inject JugadoresServices jugadoresServices
+@inject NavigationManager navigationManager
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+
+@*HTML*@
+@if (Jugador != null)
+{
+	<div class="card shadow-lg">
+
+		@*Header*@
+		<div class="card-header bg-black text-white">
+			<h3 class="mb-0">
+				<i class="oi oi-pencil me-2"></i>Editar Jugador
+			</h3>
+		</div>
+
+		@*Body*@
+		<div class="card-body">
+			<EditForm Model="Jugador" OnValidSubmit="Modificar">
+				<DataAnnotationsValidator />
+				<div class="form-group mb-3">
+					<label for="nombres" class="form-label">Nombres:</label>
+					<InputText id="nombres" class="form-control" @bind-Value="Jugador.Nombre" />
+					<ValidationMessage For="@(() => Jugador.Nombre)" />
+				</div>
+
+				<div class="form-group mb-3">
+					<label for="partidas" class="form-label">Partidas:</label>
+					<InputNumber id="partidas" class="form-control" @bind-Value="Jugador.Partidas" />
+					<ValidationMessage For="@(() => Jugador.Partidas)" />
+				</div>
+
+				<div class="d-flex justify-content-between mt-4">
+					<div>
+						<button type="button" class="btn btn-success me-2" @onclick="Eliminar">
+							<i class="oi oi-check me-2"></i>Eliminar
+						</button>
+					</div>
+
+					<div>
+						<button type="submit" class="btn btn-primary bi bi-floppy" @onclick="Modificar"> Modificar</button>
+					</div>
+					<a href="/" class="btn btn-secondary">
+						<i class="oi oi-arrow-left me-2"></i>Volver
+					</a>
+				</div>
+			</EditForm>
+		</div>
+
+		<div class="card-footer">
+			<label class="@MensajeCssClass mt-2">@Mensaje</label>
+		</div>
+	</div>
+}
+else
+{
+	<div class="alert alertalert-info mt-4" role="alert">
+		<div class="d-flex align-items-center">
+			<strong class="me-2">Cargando...</strong>
+			<div class="spinner-border spinner-border-sm" role="status">
+				<span class="visually-hidenn">Cargando...</span>
+			</div>
+		</div>
+	</div>
+}
+
+
+
+@code {
+	[Parameter]
+	public int JugadorId { get; set; }
+
+	public Jugadores Jugador { get; set; } = new Jugadores();
+	public string Mensaje { get; set; } = string.Empty;
+	public List<Jugadores> ListaJugadores { get; set; } = new List<Jugadores>();
+	private string MensajeCssClass { get; set; } = string.Empty;
+
+	protected override async Task OnInitializedAsync()
+	{
+		Jugador = await jugadoresServices.Buscar(JugadorId);
+
+		if (Jugador == null)
+		{
+			Mensaje = "El jugador que intenta editar no existe.";
+			MensajeCssClass = "alert alert-warning";
+		}
+	}
+
+	public async Task Modificar()
+	{
+		var creado = await jugadoresServices.Guardar(Jugador);
+
+		if (creado)
+		{
+			Mensaje = "Se ha modificado el jugador exitosamente.";
+			MensajeCssClass = "alert alert-success";
+		}
+		else
+		{
+			Mensaje = "No se ha podido modificar el jugador.";
+			MensajeCssClass = "alert alert-danger";
+
+		}
+	}
+
+	private async Task Eliminar()
+	{
+		bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", "¿Está seguro que desea eliminar este jugador? Esta acción no se puede deshacer.");
+
+		if (confirmado)
+		{
+			var eliminado = await jugadoresServices.Eliminar(Jugador.JugadorId);
+
+			if (eliminado)
+			{
+				navigationManager.NavigateTo("/");
+			}
+			else
+			{
+				Mensaje = "No se ha podido eliminar correctamente.";
+				MensajeCssClass = "alert alert-danger";
+			}
+		}
+
+
+	}
+}

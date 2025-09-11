@@ -1,18 +1,20 @@
-﻿@page "/Crear/Jugador"
+﻿@page "/Jugador/Crear"
 @using Microsoft.Data.SqlClient
 @using Microsoft.EntityFrameworkCore
 @inject JugadoresServices jugadoresServices
 @inject NavigationManager navigationManager
 @rendermode InteractiveServer
 
-
 @*HTML*@
 <PageTitle>Crear</PageTitle>
 <EditForm Model="jugadores" OnValidSubmit="Guardar">
     <DataAnnotationsValidator />
 
-    <div class="container"> 
-        @if (Mensaje != null){@Mensaje}
+    <div class="container">
+        @if (Mensaje != null)
+        {
+            @Mensaje
+        }
         <div class="card shadow-lg">
             <div class="card-header text-center">
                 <h5 class="card-title">Crear jugador</h5>
@@ -41,7 +43,7 @@
 
             @*footer*@
             <div class="card-footer text-center mt-2">
-                <a href="/Crear/Jugador" class="btn btn-secondary"> <span class="bi bi-arrow-left"></span> Volver</a>
+                <a href="/Jugador/Index" class="btn btn-secondary"> <span class="bi bi-arrow-left"></span> Volver</a>
                 <button type="submit" class="btn btn-primary bi bi-floppy">Guardar</button>
             </div>
         </div>
@@ -60,7 +62,6 @@
         return base.OnInitializedAsync();
     }
 
-
     public async Task Guardar()
     {
 
@@ -70,7 +71,7 @@
 
             if (creado)
             {
-                navigationManager.NavigateTo("/Index/Jugador");
+                navigationManager.NavigateTo("/Jugador/Index");
 
             }
             else
@@ -93,8 +94,13 @@
 
                 Mensaje = "Ha ocurrido un error al guardar";
             }
+        }
+        catch (Exception)
+        {
 
+            Mensaje = "Ha ocurrido un error inesperado";
         }
 
     }
 }
+

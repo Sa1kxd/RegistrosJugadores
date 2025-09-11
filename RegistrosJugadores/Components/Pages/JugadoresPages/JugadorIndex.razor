@@ -1,4 +1,4 @@
-﻿@page "/Index/Jugador"
+﻿@page "/Jugador/Index"
 
 @inject JugadoresServices jugadoresServices
 @inject NavigationManager navigationManager
@@ -10,7 +10,7 @@
         <div class="card shadow-lg">
             <div class="card-header space-between">
                 <h5 class="card-title>">Registro accordion-header jugadores</h5>
-                <a href="/Crear/Jugador" class="btn btn-primary"> <span class="bi bi-plus-square mt-3"></span> Crear</a>
+                <a href="/Jugador/Crear" class="btn btn-primary"> <span class="bi bi-plus-square mt-3"></span> Crear</a>
             </div>
             <div class="card-body">
 
@@ -70,7 +70,7 @@
                                 <td> @jugador.Partidas</td>
                                 <td class="text-center">
 
-                                    <a href="/Editar/Jugador@jugador.JugadorId" class="btn btn-outline-primary bi bi-pencil-square"></a>
+                                    <a href="/Jugador/Edit/@jugador.JugadorId" class="btn btn-outline-primary bi bi-pencil-square"></a>
 
                                 </td>
                             </tr>
