@@ -1,5 +1,97 @@
-﻿<h3>PartidasCreate</h3>
+﻿@page "/Partidas/Create"
+
+@using Microsoft.Data.SqlClient
+@using Microsoft.EntityFrameworkCore
+@inject PartidasService partidasservices
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+@*HTML*@
+<PageTitle>Crear</PageTitle>
+<EditForm Model="partidas" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+
+    <div class="container">
+        @if (Mensaje != null)
+        {
+            @Mensaje
+        }
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <h5 class="card-title">Crear jugador</h5>
+            </div>
+            <div class="card-body">
+
+                @*PartidaId*@
+                <div class="mb-3">
+                    <label class="form-label"> <strong>PartidaId</strong></label>
+                    <InputNumber class="form-control" @bind-Value="partidas.PartidaId" readonly></InputNumber>
+                </div>
+
+                @*Estado*@
+                <div class="mb-3">
+                    <label class="form-label"> <strong>Estado</strong></label>
+                    <InputNumber class="form-control" @bind-Value="partidas.PartidaId" readonly></InputNumber>
+                </div>
+            </div>
+            @*footer*@
+            <div class="card-footer text-center mt-2">
+                <a href="/Jugador/Index" class="btn btn-secondary"> <span class="bi bi-arrow-left"></span> Volver</a>
+                <button type="submit" class="btn btn-primary bi bi-floppy">Guardar</button>
+            </div>
+        </div>
+
+    </div>
+
+</EditForm>
 
 @code {
+    public Partidas partidas { get; set; } = new();
+    public String Mensaje { get; set; } = string.Empty;
 
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
+
+    public async Task Guardar()
+    {
+
+        try
+        {
+            var creado = await partidasservices.Guardar(partidas);
+
+            if (creado)
+            {
+                navigationManager.NavigateTo("/Partidas/Index");
+
+            }
+            else
+            {
+                Mensaje = "No se pudo guardar correctamente";
+
+            }
+        }
+        catch (DbUpdateException ex)
+        {
+
+            if (ex.InnerException is SqlException sqlex &&
+            (sqlex.Number == 2601 || sqlex.Number == 2627))
+            {
+
+                Mensaje = "Ya existe un jugador con ese nombre";
+            }
+            else
+            {
+
+                Mensaje = "Ha ocurrido un error al guardar";
+            }
+        }
+        catch (Exception)
+        {
+
+            Mensaje = "Ha ocurrido un error inesperado";
+        }
+
+    }
 }
