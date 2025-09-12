@@ -95,7 +95,7 @@
 
     public string Filtro { get; set; } = string.Empty;
     public string ValorFiltro { get; set; } = string.Empty;
-    //public string Mensaje { get; set; } = string.Empty;
+    public string Mensaje { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -104,20 +104,27 @@
 
     private async Task Buscar()
     {
-
-        if (ValorFiltro.Trim() != "")
+        try
         {
+            if (ValorFiltro.Trim() != "")
+            {
 
-            if (Filtro == "ID")
-            {
-                int id = (Convert.ToInt32(ValorFiltro));
-                ListaPartidas = await partidasServices.Listar(P => P.PartidaId == id);
+                if (Filtro == "ID")
+                {
+                    int id = (Convert.ToInt32(ValorFiltro));
+                    ListaPartidas = await partidasServices.Listar(P => P.PartidaId == id);
+                }
+                else if (Filtro == "Estado")
+                {
+                    String estado = ValorFiltro;
+                    ListaPartidas = await partidasServices.Listar(P => P.EstadoPartida == estado);
+                }
             }
-            else if (Filtro == "Estado")
-            {
-                String estado = ValorFiltro;
-                ListaPartidas = await partidasServices.Listar(P => P.EstadoPartida == estado);
-            }
+
+        }
+        catch (Exception ex)
+        {
+            Mensaje = $"Error al guardar: {ex.Message}";
         }
     }
 }
