@@ -1,15 +1,16 @@
 ﻿@page "/Partidas/Create"
 
-@using Microsoft.Data.SqlClient
-@using Microsoft.EntityFrameworkCore
+@using RegistrosJugadores.Models
+@inject JugadoresServices jugadoresservices
 @inject PartidasService partidasservices
 @inject NavigationManager navigationManager
 @rendermode InteractiveServer
 
 @*HTML*@
-<PageTitle>Crear</PageTitle>
+<PageTitle>Crear partida</PageTitle>
 <EditForm Model="partidas" OnValidSubmit="Guardar">
     <DataAnnotationsValidator />
+    <ValidationSummary/>
 
     <div class="container">
         @if (Mensaje != null)
@@ -18,25 +19,55 @@
         }
         <div class="card shadow-lg">
             <div class="card-header text-center">
-                <h5 class="card-title">Crear jugador</h5>
+                <h5 class="card-title">Nueva partida</h5>
             </div>
             <div class="card-body">
 
-                @*PartidaId*@
+                @*Jugador 1*@
                 <div class="mb-3">
-                    <label class="form-label"> <strong>PartidaId</strong></label>
-                    <InputNumber class="form-control" @bind-Value="partidas.PartidaId" readonly></InputNumber>
+                    <label class="form-label"> <strong>Jugador 1</strong></label>
+                    <InputSelect class="form-select" @bind-Value="partidas.Jugador1Id">
+                        <option value="">Seleccione un jugador</option>
+                        @foreach (var jugador in ListaJugadores)
+                        {
+                            <option value="@jugador.JugadorId">@jugador.Nombre</option>
+                        }
+                    </InputSelect>
                 </div>
 
-                @*Estado*@
+                @*Jugador 2*@
                 <div class="mb-3">
-                    <label class="form-label"> <strong>Estado</strong></label>
-                    <InputNumber class="form-control" @bind-Value="partidas.PartidaId" readonly></InputNumber>
+                    <label class="form-label"> <strong>Jugador 2</strong></label>
+                    <InputSelect class="form-select" @bind-Value="partidas.Jugador2Id">
+                        <option value="">Seleccione un jugador</option>
+                        @foreach (var jugador in ListaJugadores)
+                        {
+                            <option value="@jugador.JugadorId">@jugador.Nombre</option>
+                        }
+                    </InputSelect>
                 </div>
+
+                @*PartidaEstado*@
+                <div class="mb-3">
+                    <label class="form-label"> <strong>Estado de la partida</strong></label>
+                    <InputSelect class="form-select" @bind-Value="partidas.EstadoPartida">
+                        <option value="">Seleccione un estado</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="En curso">En curso</option>
+                        <option value="Finalizada">Finalizada</option>
+                    </InputSelect>
+                </div>
+
+                @*EstadoTablero*@
+                 <div class="mb-3">
+                    <label class="form-label"><strong>Estado del tablero</strong></label>
+                    <InputText class="form-control" @bind-Value="partidas.EstadoTablero" />
+                </div>
+
             </div>
             @*footer*@
             <div class="card-footer text-center mt-2">
-                <a href="/Jugador/Index" class="btn btn-secondary"> <span class="bi bi-arrow-left"></span> Volver</a>
+                <a href="/Partidas/Index" class="btn btn-secondary"> <span class="bi bi-arrow-left"></span> Volver</a>
                 <button type="submit" class="btn btn-primary bi bi-floppy">Guardar</button>
             </div>
         </div>
@@ -47,16 +78,20 @@
 
 @code {
     public Partidas partidas { get; set; } = new();
+    public List<Jugadores> ListaJugadores { get; set; } = new();
     public String Mensaje { get; set; } = string.Empty;
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        return base.OnInitializedAsync();
+        ListaJugadores = await jugadoresservices.Listar(J => true);
+
+        partidas.EstadoPartida = "Pendiente";
+        partidas.EstadoTablero = "-----------";
+        partidas.FechaInicio = DateTime.Now;
     }
 
     public async Task Guardar()
     {
-
         try
         {
             var creado = await partidasservices.Guardar(partidas);
@@ -72,26 +107,9 @@
 
             }
         }
-        catch (DbUpdateException ex)
+        catch (Exception ex)
         {
-
-            if (ex.InnerException is SqlException sqlex &&
-            (sqlex.Number == 2601 || sqlex.Number == 2627))
-            {
-
-                Mensaje = "Ya existe un jugador con ese nombre";
-            }
-            else
-            {
-
-                Mensaje = "Ha ocurrido un error al guardar";
-            }
+            Mensaje = $"Error al guardar: {ex.Message}";
         }
-        catch (Exception)
-        {
-
-            Mensaje = "Ha ocurrido un error inesperado";
-        }
-
     }
 }

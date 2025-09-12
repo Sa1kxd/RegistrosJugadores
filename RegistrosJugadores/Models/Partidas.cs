@@ -18,7 +18,7 @@ public class Partidas
     public int? GanadorId { get; set; }
     public int? TurnoJugadorId { get; set; }
 
-    [StringLength(9)]
+    [StringLength(15)]
     public string EstadoTablero { get; set; }
 
     public DateTime FechaInicio { get; set; } = DateTime.UtcNow;
