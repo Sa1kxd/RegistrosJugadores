@@ -23,7 +23,7 @@
                     </div>
 
                     @*ValorFiltro*@
-              <PartidasIndex />      <div class="col-4">
+                    <div class="col-4">
                         <label class="col-form-label"><strong>B&uacute;squeda</strong></label>
                     </div>
                 </div>
@@ -50,7 +50,7 @@
                 </div>
 
                 <table class="table table-hover">
-                 
+
                     <thead class="table  table-striped text-black">
 
                         <tr>
@@ -78,9 +78,9 @@
                     </tbody>
                 </table>
             </div>
-              
+
             <div class="card-footer space-between">
-                <label>Cantidad de jugadores:  @ListaJugadores.Count()</label> 
+                <label>Cantidad de jugadores:  @ListaJugadores.Count()</label>
             </div>
 
         </div>
@@ -104,12 +104,13 @@
         if (ValorFiltro.Trim() != "")
         {
 
-            if(Filtro == "ID")
+            if (Filtro == "ID")
             {
                 int id = (Convert.ToInt32(ValorFiltro));
-                ListaJugadores = await jugadoresServices.Listar(J => J.JugadorId == id);    
+                ListaJugadores = await jugadoresServices.Listar(J => J.JugadorId == id);
 
-            }else if(Filtro == "Nombre")
+            }
+            else if (Filtro == "Nombre")
             {
 
                 ListaJugadores = await jugadoresServices.Listar(J => J.Nombre.Contains(ValorFiltro));
