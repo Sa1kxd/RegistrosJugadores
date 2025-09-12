@@ -13,9 +13,6 @@ public class Contexto : DbContext
         modelBuilder.Entity<Jugadores>()
             .HasIndex(J => J.Nombre)
             .IsUnique();
-        base.OnModelCreating(modelBuilder);
-
-        base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Partidas>()
             .HasOne(p => p.Jugador1)
@@ -40,6 +37,8 @@ public class Contexto : DbContext
             .WithMany()
             .HasForeignKey(p => p.TurnoJugadorId)
             .OnDelete(DeleteBehavior.NoAction);
+        
+        base.OnModelCreating(modelBuilder);
     }
 
 }
