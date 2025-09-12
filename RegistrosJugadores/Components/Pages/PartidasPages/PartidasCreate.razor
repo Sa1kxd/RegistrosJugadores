@@ -10,7 +10,7 @@
 <PageTitle>Crear partida</PageTitle>
 <EditForm Model="partidas" OnValidSubmit="Guardar">
     <DataAnnotationsValidator />
-    <ValidationSummary/>
+    <ValidationSummary />
 
     <div class="container">
         @if (Mensaje != null)
@@ -47,6 +47,18 @@
                     </InputSelect>
                 </div>
 
+                @*Ganador*@
+                <div class="mb-3">
+                    <label class="form-label"> <strong>Ganador</strong></label>
+                    <InputSelect class="form-select" @bind-Value="partidas.GanadorId">
+                        <option value="">Seleccione un ganador</option>
+                        @foreach (var jugador in ListaJugadores)
+                        {
+                            <option value="@jugador.JugadorId">@jugador.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+
                 @*PartidaEstado*@
                 <div class="mb-3">
                     <label class="form-label"> <strong>Estado de la partida</strong></label>
@@ -59,9 +71,21 @@
                 </div>
 
                 @*EstadoTablero*@
-                 <div class="mb-3">
+                <div class="mb-3">
                     <label class="form-label"><strong>Estado del tablero</strong></label>
                     <InputText class="form-control" @bind-Value="partidas.EstadoTablero" />
+                </div>
+
+                @*Fecha Inicio*@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Fecha de inicio</strong></label>
+                    <InputDate class="form-control" @bind-Value="partidas.FechaInicio" />
+                </div>
+
+                @*Fecha Fin*@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Fecha de fin</strong></label>
+                    <InputDate class="form-control" @bind-Value="partidas.FechaFin" />
                 </div>
 
             </div>

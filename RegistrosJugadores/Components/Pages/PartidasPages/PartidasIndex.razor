@@ -37,7 +37,6 @@
                             <option value="" selected disabled>Elija una opci&oacute;n</option>
                             <option value="ID">ID</option>
                             <option value="Estado">Estado</option>
-                            <option value="Jugador">Jugador</option>
                         </InputSelect>
                     </div>
 
@@ -113,6 +112,11 @@
             {
                 int id = (Convert.ToInt32(ValorFiltro));
                 ListaPartidas = await partidasServices.Listar(P => P.PartidaId == id);
+            }
+            else if (Filtro == "Estado")
+            {
+                String estado = ValorFiltro;
+                ListaPartidas = await partidasServices.Listar(P => P.EstadoPartida == estado);
             }
         }
     }
