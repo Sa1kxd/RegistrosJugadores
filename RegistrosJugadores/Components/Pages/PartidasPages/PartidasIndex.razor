@@ -13,7 +13,7 @@
                 <h5 class="card-title">Registro de partidas</h5>
                 <a href="/Partidas/Create" class="btn btn-primary"> <span class="bi bi-plus-square-fill-nav-menu mt-3"></span> Crear</a>
             </div>
-            <div class="card">
+            <div class="card-body">
 
                 @*labels*@
                 <div class="row">
@@ -36,7 +36,8 @@
                         <InputSelect class="form-select" @bind-Value="Filtro">
                             <option value="" selected disabled>Elija una opci&oacute;n</option>
                             <option value="ID">ID</option>
-                            <option value="Nombre">Nombre</option>
+                            <option value="Estado">Estado</option>
+                            <option value="Jugador">Jugador</option>
                         </InputSelect>
                     </div>
 
@@ -56,9 +57,11 @@
                             <th>PartidaId</th>
                             <th>Jugador 1</th>
                             <th>Jugador 2</th>
+                            <th>Estado</th>
                             <th>Ganador</th>
                             <th>Fecha Inicio</th>
                             <th>Fecha Fin</th>
+                            <th>Opciones</th>
                         </tr>
                     </thead>
 
