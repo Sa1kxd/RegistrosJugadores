@@ -16,7 +16,7 @@ public class Partidas
     public string EstadoPartida { get; set; }
 
     public int? GanadorId { get; set; }
-    public int TurnoJugadorId { get; set; }
+    public int? TurnoJugadorId { get; set; }
 
     [StringLength(9)]
     public string EstadoTablero { get; set; }
