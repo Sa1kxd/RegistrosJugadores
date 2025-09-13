@@ -8,87 +8,87 @@
 <PageTitle>Registro de partidas</PageTitle>
 <div class="container">
     <div class="card shadow-lg">
-        <div class="card shadow-lg">
-            <div class="card-header space-between">
-                <h5 class="card-title">Registro de partidas</h5>
-                <a href="/Partidas/Create" class="btn btn-primary"> <span class="bi bi-plus-square-fill-nav-menu mt-3"></span> Crear</a>
+
+        <div class="card-header space-between">
+            <h5 class="card-title">Registro de partidas</h5>
+            <a href="/Partidas/Create" class="btn btn-primary"> <span class="bi bi-plus-square-fill-nav-menu mt-3"></span> Crear</a>
+        </div>
+        <div class="card-body">
+
+            @*labels*@
+            <div class="row">
+
+                @*Filtrar por*@
+                <div class="col-3">
+                    <label class="col-form-label"><strong>Filtrar por</strong></label>
+                </div>
+
+                @*ValorFiltro*@
+                <div class="col-4">
+                    <label class="col-form-label"><strong>B&uacute;squeda</strong></label>
+                </div>
             </div>
-            <div class="card-body">
 
-                @*labels*@
-                <div class="row">
-
-                    @*Filtrar por*@
-                    <div class="col-3">
-                        <label class="col-form-label"><strong>Filtrar por</strong></label>
-                    </div>
-
-                    @*ValorFiltro*@
-                    <div class="col-4">
-                        <label class="col-form-label"><strong>B&uacute;squeda</strong></label>
-                    </div>
+            @*Inputs y botones*@
+            <div class="row align-items-center">
+                @*filtro*@
+                <div class="col-3">
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" selected disabled>Elija una opci&oacute;n</option>
+                        <option value="ID">ID</option>
+                        <option value="Estado">Estado</option>
+                    </InputSelect>
                 </div>
 
-                @*Inputs y botones*@
-                <div class="row align-items-center">
-                    @*filtro*@
-                    <div class="col-3">
-                        <InputSelect class="form-select" @bind-Value="Filtro">
-                            <option value="" selected disabled>Elija una opci&oacute;n</option>
-                            <option value="ID">ID</option>
-                            <option value="Estado">Estado</option>
-                        </InputSelect>
-                    </div>
-
-                    @*Busqueda*@
-                    <div class="col-4">
-                        <div class="input-group">
-                            <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
-                            <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
-                        </div>
+                @*Busqueda*@
+                <div class="col-4">
+                    <div class="input-group">
+                        <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
+                        <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
                     </div>
                 </div>
-                <table class="table table-hover">
+            </div>
+            <table class="table table-hover">
 
-                    <thead class="table  table-striped text-black">
+                <thead class="table  table-striped text-black">
 
+                    <tr>
+                        <th>PartidaId</th>
+                        <th>Jugador 1</th>
+                        <th>Jugador 2</th>
+                        <th>Estado</th>
+                        <th>Ganador</th>
+                        <th>Fecha Inicio</th>
+                        <th>Fecha Fin</th>
+                        <th>Opciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var partida in ListaPartidas)
+                    {
                         <tr>
-                            <th>PartidaId</th>
-                            <th>Jugador 1</th>
-                            <th>Jugador 2</th>
-                            <th>Estado</th>
-                            <th>Ganador</th>
-                            <th>Fecha Inicio</th>
-                            <th>Fecha Fin</th>
-                            <th>Opciones</th>
+                            <td>@partida.PartidaId</td>
+                            <td>@partida.Jugador1?.Nombre</td>
+                            <td>@partida.Jugador2?.Nombre</td>
+                            <td>@partida.EstadoPartida</td>
+                            <td>@partida.Ganador?.Nombre</td>
+                            <td>@partida.FechaInicio.ToString("dd/mm/yyyy")</td>
+                            <td>@partida.FechaFin?.ToString("dd/MM/yyyy")</td>
+                            <td class="text-center">
+                                <a href="/Partidas/Edit/@partida.PartidaId" class="btn btn-outline-primary bi bi-pencil-square"></a>
+                            </td>
                         </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach (var partida in ListaPartidas)
-                        {
-                            <tr>
-                                <td>@partida.PartidaId</td>
-                                <td>@partida.Jugador1?.Nombre</td>
-                                <td>@partida.Jugador2?.Nombre</td>
-                                <td>@partida.EstadoPartida</td>
-                                <td>@partida.Ganador?.Nombre</td>
-                                <td>@partida.FechaInicio.ToString("dd/mm/yyyy")</td>
-                                <td>@partida.FechaFin?.ToString("dd/MM/yyyy")</td>
-                                <td class="text-center">
-                                    <a href="/Partidas/Edit/@partida.PartidaId" class="btn btn-outline-primary bi bi-pencil-square"></a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-            <div class="card-footer space-between">
-                <label>Cantidad de partidas:  @ListaPartidas.Count()</label>
-            </div>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer space-between">
+            <label>Cantidad de partidas:  @ListaPartidas.Count()</label>
         </div>
     </div>
 </div>
+
 
 @code {
     public List<Partidas> ListaPartidas { get; set; } = new List<Partidas>();
