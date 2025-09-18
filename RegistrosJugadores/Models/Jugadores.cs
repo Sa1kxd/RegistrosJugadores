@@ -9,5 +9,7 @@ public class Jugadores
     [Required(ErrorMessage = "Este campo es requerido")]
     public String Nombre { get; set; }
     [Range(0, int.MaxValue, ErrorMessage = "Valor debe ser mayor a 0")]
-    public int Partidas { get; set; }
+    public int Victorias { get; set; }
+    public int Derrotas { get; set; }
+    public int Empates { get; set; }
 }
