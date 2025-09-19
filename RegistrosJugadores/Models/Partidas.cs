@@ -13,15 +13,15 @@ public class Partidas
 
     [Required]
     [StringLength(20)]
-    public string EstadoPartida { get; set; }
+    public string EstadoPartida { get; set; } = string.Empty;
 
     public int? GanadorId { get; set; }
     public int? TurnoJugadorId { get; set; }
 
     [StringLength(15)]
-    public string EstadoTablero { get; set; }
+    public string EstadoTablero { get; set; } = string.Empty;
 
-    public DateTime FechaInicio { get; set; } = DateTime.UtcNow;
+    public DateTime FechaInicio { get; set; } = DateTime.Now;
     public DateTime? FechaFin { get; set; }
 
     // Propiedades de navegación
