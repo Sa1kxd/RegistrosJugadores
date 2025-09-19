@@ -107,7 +107,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-
         jugadoresDisponibles = await JugadoresService.Listar(j => true) ?? new List<Jugadores>();
         var partidas = await PartidasService.Listar(p => p.EstadoPartida == "En Curso");
         partidaEnCurso = partidas.FirstOrDefault();
@@ -121,12 +120,12 @@
         }
         partida = new Partidas
         {
-            Jugador1Id = jugadorXId,
-            Jugador2Id = jugadorOId,
-            EstadoPartida = "En Curso",
-            EstadoTablero = "_________",
-            FechaInicio = DateTime.Now,
-            TurnoJugadorId = jugadorXId
+           Jugador1Id = jugadorXId,
+           Jugador2Id = jugadorOId,
+           EstadoPartida = "En Curso",
+           EstadoTablero = "_________", 
+           FechaInicio = DateTime.Now,  
+           TurnoJugadorId = jugadorXId  // CORREGIDO: era jugadorXI
         };
 
         if (await PartidasService.Guardar(partida))
@@ -270,7 +269,6 @@
     {
         if (partida != null && partida.EstadoPartida == "En Curso")
         {
-
             partidaEnCurso = partida;
         }
 
