@@ -1,7 +1,305 @@
 ﻿@page "/"
+@inject JugadoresServices JugadoresService
+@inject PartidasService PartidasService
+@using RegistrosJugadores.Models
+@rendermode InteractiveServer
 
-<PageTitle>Home</PageTitle>
+<PageTitle>TicTacToe</PageTitle>
 
-<h1>Samil De La Cruz 2022-0024</h1>
+<div class="game-container">
+    @if (!gameStarted)
+    {
+        <div class="selection-screen text-center">
+            <h1>Seleccionar Jugadores</h1>
 
-Welcome to your new app.
+            @* Mostrar si hay partida en curso *@
+            @if (partidaEnCurso != null)
+            {
+                <div class="alert alert-info mb-3">
+                    <h5>Partida en curso encontrada</h5>
+                    <p>Hay una partida en progreso entre los jugadores. ¿Qué deseas hacer?</p>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-primary" @onclick="ContinuarPartida">
+                            Continuar Partida
+                        </button>
+                        <button class="btn btn-warning" @onclick="FinalizarPartidaAnterior">
+                            Iniciar Nueva Partida
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <div class="player-buttons">
+                <div class="mb-3">
+                    <label class="form-label">Jugador X</label>
+                    <select class="form-select" @bind="jugadorXId">
+                        <option value="0">Seleccione jugador</option>
+                        @foreach (var j in jugadoresDisponibles)
+                        {
+                            <option value="@j.JugadorId">@j.Nombre</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Jugador O</label>
+                    <select class="form-select" @bind="jugadorOId" disabled="@(jugadorXId == 0)">
+                        <option value="0">Seleccione jugador</option>
+                        @foreach (var j in jugadoresDisponibles.Where(j => j.JugadorId != jugadorXId))
+                        {
+                            <option value="@j.JugadorId">@j.Nombre</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <button class="btn btn-success btn-lg" @onclick="StartGame"
+                        disabled="@(jugadorXId == 0 || jugadorOId == 0 || jugadorXId == jugadorOId)">
+                    Iniciar Nueva Partida
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="game-screen">
+            <div class="game-info mb-3 text-center">
+                <h3>@GetNombreJugador(jugadorXId) (X) vs @GetNombreJugador(jugadorOId) (O)</h3>
+                <h4>@GameStatus</h4>
+            </div>
+
+            <div class="game-board">
+                @for (int i = 0; i < 9; i++)
+                {
+                    int localIndex = i;
+                    <button class="cell @GetPlayerClass(tablero[localIndex])"
+                            @onclick="() => HandleCellClick(localIndex)"
+                            disabled="@(tablero[localIndex] != null || winner != null || esEmpate)">
+                        @tablero[localIndex]
+                    </button>
+                }
+            </div>
+
+            <div class="game-controls mt-3 text-center">
+                <button class="btn btn-secondary me-2" @onclick="RestartGame">
+                    Reiniciar
+                </button>
+                <button class="btn btn-outline-primary" @onclick="VolverASeleccion">
+                    Nueva Partida
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Jugadores> jugadoresDisponibles = new();
+    private int jugadorXId;
+    private int jugadorOId;
+
+    private bool gameStarted = false;
+    private string?[] tablero = new string?[9];
+    private string jugadorActual = "X";
+    private string? winner;
+    private bool esEmpate;
+
+    private Partidas? partida;
+    private Partidas? partidaEnCurso;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        jugadoresDisponibles = await JugadoresService.Listar(j => true) ?? new List<Jugadores>();
+        var partidas = await PartidasService.Listar(p => p.EstadoPartida == "En Curso");
+        partidaEnCurso = partidas.FirstOrDefault();
+    }
+
+    private async Task StartGame()
+    {
+        if (partidaEnCurso != null)
+        {
+            await FinalizarPartidaAnterior();
+        }
+        partida = new Partidas
+        {
+            Jugador1Id = jugadorXId,
+            Jugador2Id = jugadorOId,
+            EstadoPartida = "En Curso",
+            EstadoTablero = "_________",
+            FechaInicio = DateTime.Now,
+            TurnoJugadorId = jugadorXId
+        };
+
+        if (await PartidasService.Guardar(partida))
+        {
+            partida = await PartidasService.Buscar(partida.PartidaId);
+        }
+        else
+        {
+            partida = null;
+            return;
+        }
+
+        InicializarTablero();
+        gameStarted = true;
+        StateHasChanged();
+    }
+
+    private async Task ContinuarPartida()
+    {
+        if (partidaEnCurso == null) return;
+
+        partida = partidaEnCurso;
+        jugadorXId = partida.Jugador1Id;
+        jugadorOId = partida.Jugador2Id ?? 0;
+
+        tablero = partida.EstadoTablero
+            .Select(c => c == '_' ? null : c.ToString())
+            .ToArray();
+
+        jugadorActual = partida.TurnoJugadorId == jugadorXId ? "X" : "O";
+        if (CheckForWinner())
+        {
+            winner = jugadorActual == "X"
+                ? GetNombreJugador(jugadorXId)
+                : GetNombreJugador(jugadorOId);
+        }
+        else if (tablero.All(c => c != null))
+        {
+            esEmpate = true;
+        }
+
+        gameStarted = true;
+        partidaEnCurso = null;
+        StateHasChanged();
+    }
+
+    private async Task FinalizarPartidaAnterior()
+    {
+        if (partidaEnCurso != null)
+        {
+            partidaEnCurso.EstadoPartida = "Finalizada";
+            partidaEnCurso.FechaFin = DateTime.Now;
+            await PartidasService.Guardar(partidaEnCurso);
+            partidaEnCurso = null;
+        }
+    }
+
+    private void InicializarTablero()
+    {
+        tablero = new string?[9];
+        jugadorActual = "X";
+        winner = null;
+        esEmpate = false;
+    }
+
+    private async Task HandleCellClick(int index)
+    {
+        if (tablero[index] != null || winner != null || esEmpate || partida == null) return;
+
+        tablero[index] = jugadorActual;
+        partida.EstadoTablero = string.Join("", tablero.Select(c => c ?? "_"));
+
+        if (CheckForWinner())
+        {
+            winner = jugadorActual == "X"
+                ? GetNombreJugador(jugadorXId)
+                : GetNombreJugador(jugadorOId);
+
+            partida.GanadorId = jugadorActual == "X" ? jugadorXId : jugadorOId;
+            partida.EstadoPartida = "Finalizada";
+            partida.FechaFin = DateTime.Now;
+            partida.TurnoJugadorId = null;
+
+            await PartidasService.Guardar(partida);
+            await PartidasService.ActualizarEstadisticasAsync(partida);
+        }
+        else if (tablero.All(c => c != null))
+        {
+            esEmpate = true;
+            partida.GanadorId = null;
+            partida.EstadoPartida = "Empate";
+            partida.FechaFin = DateTime.Now;
+            partida.TurnoJugadorId = null;
+
+            await PartidasService.Guardar(partida);
+            await PartidasService.ActualizarEstadisticasAsync(partida);
+        }
+        else
+        {
+            jugadorActual = jugadorActual == "X" ? "O" : "X";
+            partida.TurnoJugadorId = jugadorActual == "X" ? jugadorXId : jugadorOId;
+            await PartidasService.Guardar(partida);
+        }
+
+        StateHasChanged();
+    }
+
+    private bool CheckForWinner()
+    {
+        int[][] lines =
+        {
+            new[] { 0,1,2 }, new[] { 3,4,5 }, new[] { 6,7,8 },
+            new[] { 0,3,6 }, new[] { 1,4,7 }, new[] { 2,5,8 },
+            new[] { 0,4,8 }, new[] { 2,4,6 }
+        };
+
+        foreach (var line in lines)
+        {
+            var a = tablero[line[0]];
+            var b = tablero[line[1]];
+            var c = tablero[line[2]];
+
+            if (!string.IsNullOrEmpty(a) && a == b && b == c)
+                return true;
+        }
+        return false;
+    }
+
+    private async Task RestartGame()
+    {
+        if (partida != null)
+        {
+            partida.EstadoPartida = "Finalizada";
+            partida.FechaFin = DateTime.Now;
+            await PartidasService.Guardar(partida);
+        }
+        await StartGame();
+    }
+
+    private void VolverASeleccion()
+    {
+        if (partida != null && partida.EstadoPartida == "En Curso")
+        {
+
+            partidaEnCurso = partida;
+        }
+
+        gameStarted = false;
+        jugadorXId = 0;
+        jugadorOId = 0;
+        InicializarTablero();
+        partida = null;
+        StateHasChanged();
+    }
+
+    private string GetPlayerClass(string? val) =>
+        val == "X" ? "player-x" : val == "O" ? "player-o" : "";
+
+    private string GameStatus => winner != null
+        ? $"🏆 Ganador: {winner}"
+        : esEmpate
+            ? "🤝 Empate"
+            : $"Turno de {GetJugadorActualNombre()}";
+
+    private string GetJugadorActualNombre()
+    {
+        var jugadorId = jugadorActual == "X" ? jugadorXId : jugadorOId;
+        return GetNombreJugador(jugadorId);
+    }
+
+    private string GetNombreJugador(int jugadorId)
+    {
+        var jugador = jugadoresDisponibles.FirstOrDefault(j => j.JugadorId == jugadorId);
+        return jugador?.Nombre ?? "Jugador Desconocido";
+    }
+}
