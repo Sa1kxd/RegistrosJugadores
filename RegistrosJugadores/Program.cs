@@ -16,7 +16,8 @@ builder.Services.AddDbContextFactory<Contexto>(o => o.UseSqlServer(ConStr));
 
 builder.Services.AddScoped<JugadoresServices>();
 builder.Services.AddScoped<PartidasService>();
-//
+
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://gestionhuacalesapi.azurewebsites.net/") });
 
 var app = builder.Build();
 
