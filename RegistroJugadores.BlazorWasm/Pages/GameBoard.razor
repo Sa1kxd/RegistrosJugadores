@@ -1,0 +1,234 @@
+﻿@page "/game/{partidaId:int}"
+@using RegistroJugadores.BlazorWasm.DTO
+@using RegistroJugadores.BlazorWasm.Services
+@using RegistroJugadores.BlazorWasm.Shared
+@inject IMovimientoAPIService MovimientosApi
+@inject RegistroJugadores.BlazorWasm.Services.IPartidasApiService PartidasApi
+@inject NavigationManager navigationManager
+
+<div class="container text-center mt-5">
+    @if (!cargado)
+    {
+        <p>Cargando partida...</p>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="alert alert-danger">@error</div>
+        }
+
+        @if (esperandoOponente && jugador.Equals("X", StringComparison.OrdinalIgnoreCase))
+        {
+            <div class="alert alert-warning">
+                Esperando que se una <b>Jugador O</b>...
+                <div class="small text-muted">El juego se habilitará automáticamente al unirse.</div>
+            </div>
+        }
+
+        <h2 class="mb-3">@GameStatus</h2>
+
+        <div class="game-board" style="display:grid;grid-template-columns:repeat(3,80px);gap:8px;justify-content:center;">
+            @for (var i = 0; i < 9; i++)
+            {
+                var idx = i;
+                <button class="cell @GetPlayerClass(board[idx])"
+                        style="width:80px;height:80px;font-size:2rem;"
+                        @onclick="() => HandleCellClick(idx)"
+                        disabled="@(board[idx] != null || winner != null || esEmpate || !EsMiTurno || (esperandoOponente && jugador.Equals("X", StringComparison.OrdinalIgnoreCase)))">
+                    @board[idx]?.ToString()
+                </button>
+            }
+        </div>
+
+        <div class="mt-4">
+            <button class="btn btn-secondary" @onclick="ReiniciarLocal">Reiniciar</button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int partidaId { get; set; }
+
+    [SupplyParameterFromQuery] public string jugador { get; set; } = "X";
+    [SupplyParameterFromQuery] public string jugadorX { get; set; } = "Jugador X";
+    [SupplyParameterFromQuery] public string jugadorO { get; set; } = "Jugador O";
+
+    private enum PlayerType { X, O }
+
+    private PlayerType?[] board = new PlayerType?[9];
+    private PlayerType _currentPlayerType = PlayerType.X;
+    private PlayerType? winner;
+    private bool esEmpate;
+    private bool cargado;
+    private bool esperandoOponente = true;
+    private string? error;
+    private CancellationTokenSource? _cts;
+    private bool? apiBaseUno;
+
+    private string GameStatus =>
+        winner != null ? $"🏆 Ganó {(winner == PlayerType.X ? jugadorX : jugadorO)}!" :
+        esEmpate ? "🤝 ¡Empate!" :
+        $"Turno de {(_currentPlayerType == PlayerType.X ? jugadorX : jugadorO)}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (partidaId <= 0) { cargado = true; return; }
+        await SincronizarPartidaYMovs();
+        _ = StartPolling();
+        cargado = true;
+    }
+
+    private async Task StartPolling()
+    {
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(1200));
+            while (await timer.WaitForNextTickAsync(token))
+            {
+                await InvokeAsync(SincronizarPartidaYMovs);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task SincronizarPartidaYMovs()
+    {
+        error = null;
+
+        var p = await PartidasApi.GetPartidaAsync(partidaId);
+        if (p is Resource<PartidaResponse>.Success okp)
+        {
+            esperandoOponente = okp.Data.Jugador2Id is null;
+        }
+
+        if (jugador.Equals("O", StringComparison.OrdinalIgnoreCase))
+            esperandoOponente = false;
+
+        var res = await MovimientosApi.GetMovimientosAsync(partidaId);
+        if (res is not Resource<List<MovimientoResponse>>.Success ok) return;
+
+        var movimientos = ok.Data;
+
+        if (apiBaseUno is null && movimientos.Count > 0)
+        {
+            var minFila = movimientos.Min(m => m.PosicionFila);
+            var minCol = movimientos.Min(m => m.PosicionColumna);
+            var maxFila = movimientos.Max(m => m.PosicionFila);
+            var maxCol = movimientos.Max(m => m.PosicionColumna);
+            apiBaseUno = (minFila >= 1 && minCol >= 1) || (maxFila >= 3 || maxCol >= 3);
+        }
+
+        board = new PlayerType?[9];
+
+        foreach (var m in movimientos)
+        {
+            var fila = m.PosicionFila;
+            var col = m.PosicionColumna;
+
+            if (apiBaseUno != false) { fila -= 1; col -= 1; }
+
+            if (fila is >= 0 and < 3 && col is >= 0 and < 3)
+            {
+                int idx = fila * 3 + col;
+                board[idx] = (m.Jugador?.ToUpper() == "X") ? PlayerType.X : PlayerType.O;
+            }
+        }
+
+        if (movimientos.Count == 0)
+        {
+            _currentPlayerType = jugador.Equals("O", StringComparison.OrdinalIgnoreCase)
+                ? PlayerType.O
+                : PlayerType.X;
+        }
+        else
+        {
+            _currentPlayerType = (movimientos.Last().Jugador?.ToUpper() == "X") ? PlayerType.O : PlayerType.X;
+        }
+
+        if (esperandoOponente && movimientos.Any(m => (m.Jugador ?? "X").ToUpper() == "O"))
+            esperandoOponente = false;
+
+        winner = CheckForWinner();
+        esEmpate = winner == null && board.All(c => c != null);
+        StateHasChanged();
+    }
+
+    private async Task HandleCellClick(int index)
+    {
+        if (board[index] != null || winner != null || esEmpate || !EsMiTurno || (esperandoOponente && jugador.Equals("X", StringComparison.OrdinalIgnoreCase)))
+            return;
+
+        var fila0 = index / 3;
+        var col0 = index % 3;
+
+        int filaEnviar, colEnviar;
+        if (apiBaseUno == false)
+        {
+            filaEnviar = fila0;
+            colEnviar = col0;
+        }
+        else
+        {
+            filaEnviar = fila0 + 1;
+            colEnviar = col0 + 1;
+        }
+
+        var req = new MovimientoRequest
+        {
+            PartidaId = partidaId,
+            Jugador = jugador.ToUpper(),
+            PosicionFila = filaEnviar,
+            PosicionColumna = colEnviar
+        };
+
+        var resp = await MovimientosApi.PostMovimientoAsync(req);
+        if (resp is Resource<bool>.Success)
+        {
+            await SincronizarPartidaYMovs();
+        }
+        else if (resp is Resource<bool>.Error e)
+        {
+            error = e.Message;
+        }
+    }
+
+    private bool EsMiTurno =>
+        (_currentPlayerType == PlayerType.X && jugador.ToUpper() == "X") ||
+        (_currentPlayerType == PlayerType.O && jugador.ToUpper() == "O");
+
+    private PlayerType? CheckForWinner()
+    {
+        int[][] lines = {
+            new[]{0,1,2}, new[]{3,4,5}, new[]{6,7,8},
+            new[]{0,3,6}, new[]{1,4,7}, new[]{2,5,8},
+            new[]{0,4,8}, new[]{2,4,6}
+    };
+
+        foreach (var line in lines)
+        {
+            var a = line[0]; var b = line[1]; var c = line[2];
+            if (board[a].HasValue && board[a] == board[b] && board[a] == board[c])
+                return board[a];
+        }
+        return null;
+    }
+
+    private void ReiniciarLocal()
+    {
+        board = new PlayerType?[9];
+        _currentPlayerType = PlayerType.X;
+        winner = null;
+        esEmpate = false;
+        error = null;
+    }
+
+    private string GetPlayerClass(PlayerType? player) =>
+        !player.HasValue ? "" : (player == PlayerType.X ? "player-x" : "player-o");
+
+    public void Dispose() => _cts?.Cancel();
+}

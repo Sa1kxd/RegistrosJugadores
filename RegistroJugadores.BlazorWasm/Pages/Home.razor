@@ -1,7 +1,128 @@
-﻿@page "/"
+﻿@page "/"﻿
 
-<PageTitle>Home</PageTitle>
+@using RegistroJugadores.BlazorWasm.DTO
+@using RegistroJugadores.BlazorWasm.Services
+@using RegistroJugadores.BlazorWasm.Shared
+@inject RegistroJugadores.BlazorWasm.Services.IPartidasApiService PartidasApi
+@inject NavigationManager navigationManager
 
-<h1>Hello, world!</h1>
+<div class="container mt-5" style="max-width:520px;">
+    <h3 class="mb-4 text-center">Tic Tac Toe</h3>
 
-Welcome to your new app.
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="alert alert-danger">@error</div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Iniciar partida</h5>
+            <div class="mb-2">
+                <label class="form-label">Tu JugadorId (serás X)</label>
+                <input class="form-control" type="number" @bind="jugadorId" min="1" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Nombre a mostrar (opcional)</label>
+                <input class="form-control" type="text" @bind="nombreX" />
+            </div>
+            <button class="btn btn-primary w-100" @onclick="IniciarPartida" disabled="@(jugadorId <= 0 || busy)">
+                @(busy ? "Creando..." : "Iniciar partida")
+            </button>
+            <small class="text-muted d-block mt-2">
+                No podrás jugar hasta que otro jugador se una.
+            </small>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Buscar y unirse a una partida</h5>
+            <div class="mb-2">
+                <label class="form-label">ID de la partida</label>
+                <input class="form-control" type="number" @bind="joinPartidaId" min="1" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Tu JugadorId (entrarás como O)</label>
+                <input class="form-control" type="number" @bind="jugadorIdO" min="1" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Nombre a mostrar (opcional)</label>
+                <input class="form-control" type="text" @bind="nombreO" />
+            </div>
+            <button class="btn btn-success w-100" @onclick="Unirse" disabled="@(joinPartidaId <= 0 || jugadorIdO <= 0 || busy)">
+                Unirse
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int jugadorId;
+    private int jugadorIdO;
+    private int joinPartidaId;
+    private string? nombreX = "Jugador X";
+    private string? nombreO = "Jugador O";
+    private string? error;
+    private bool busy;
+
+    private async Task IniciarPartida()
+    {
+        error = null;
+        busy = true;
+        try
+        {
+            var res = await PartidasApi.PostPartida(jugadorId, null);
+            if (res is Resource<PartidaResponse>.Success ok)
+            {
+                var x = Uri.EscapeDataString(nombreX ?? "Jugador X");
+                var o = Uri.EscapeDataString(nombreO ?? "Jugador O");
+                navigationManager.NavigateTo($"/game/{ok.Data.PartidaId}?jugador=X&jugadorX={x}&jugadorO={o}");
+            }
+            else if (res is Resource<PartidaResponse>.Error e)
+            {
+                error = e.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally { busy = false; }
+    }
+
+    private async Task Unirse()
+    {
+        error = null;
+        if (joinPartidaId <= 0 || jugadorIdO <= 0) return;
+
+        busy = true;
+        try
+        {
+            var check = await PartidasApi.GetPartidaAsync(joinPartidaId);
+            if (check is Resource<PartidaResponse>.Error e)
+            {
+                error = "No se encontró la partida con ese ID. " + e.Message;
+                return;
+            }
+
+            var join = await PartidasApi.JoinPartidaViaPutAsync(joinPartidaId, jugadorIdO);
+            if (join is Resource<bool>.Error errJoin)
+            {
+                error = errJoin.Message;
+                return;
+            }
+
+            var x = Uri.EscapeDataString(nombreX ?? "Jugador X");
+            var o = Uri.EscapeDataString(nombreO ?? "Jugador O");
+            navigationManager.NavigateTo($"/game/{joinPartidaId}?jugador=O&jugadorX={x}&jugadorO={o}");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}
