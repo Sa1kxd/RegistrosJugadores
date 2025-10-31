@@ -1,12 +1,8 @@
 ﻿namespace RegistrosJugadores.DTO;
 
-public class MovimientoRequest
-{
-    public int PartidaId { get; set; }
-
-    public string Jugador { get; set; }
-
-    public int PosicionFila { get; set; }
-
-    public int PosicionColumna { get; set; }
-}
+public record MovimientoRequest(
+     int PartidaId,
+     string Jugador,
+     int PosicionFila,
+     int PosicionColumna
+);
