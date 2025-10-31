@@ -27,4 +27,10 @@
     <Folder Include="DTO\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="DAL\Contexto.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
+
 </Project>
