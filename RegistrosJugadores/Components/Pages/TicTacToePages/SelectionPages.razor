@@ -1,0 +1,76 @@
+﻿@page "/Selection"
+@inject IPartidaApiService partidasApiService
+@inject NavigationManager navigationManager
+@using RegistrosJugadores.DTO
+@rendermode InteractiveServer
+
+<PageTitle>Selección de jugadores - TicTacToe</PageTitle>
+<div class="container mx-auto max-w-lg p-6 bg-white rounded-lg shadow-xl text-center">
+
+    <div class="game-container">
+        <div class="selection-screen">
+            <h1>Tic Tac Toe</h1>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Ingresa el ID de la partida</label>
+                <div class="input-group">
+                    <InputNumber class="form-control" @bind-Value="partidaId"></InputNumber>
+                    <button type="button" class="btn btn-outline-secondary bi bi-search"
+                            @onclick="JoinGame" disabled="@(partidaId <= 0)">
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Conectarse como:</label>
+                <InputSelect class="form-select" @bind-Value="rolSeleccionado">
+                    <option value="">--- Seleccione rol ---</option>
+                    <option value="X">Jugador X</option>
+                    <option value="O">Jugador O</option>
+                    <option value="Espectador">Espectador</option>
+                </InputSelect>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMensaje))
+            {
+                <div class="alert alert-danger">@errorMensaje</div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Jugadores> ListaJugadores { get; set; } = new List<Jugadores>();
+
+    private int partidaId;
+
+    private string rolSeleccionado = "";
+
+    private string errorMensaje = string.Empty;
+
+    private async Task JoinGame()
+    {
+        errorMensaje = string.Empty;
+
+        if (partidaId <= 0)
+        {
+            errorMensaje = "El id de la partida debe ser mayor que 0.";
+            return;
+        }
+
+        if (rolSeleccionado == "")
+        {
+            errorMensaje = "Debe seleccionar un rol antes de unirse a una partida.";
+            return;
+        }
+
+        var response = await partidasApiService.GetPartidasAsync(partidaId);
+        if (response is Resource<PartidaResponse>.Error error)
+        {
+            errorMensaje = $"Error al unirse a partida: {error.Message}";
+            return;
+        }
+
+        navigationManager.NavigateTo($"/TicTacToe/Board/{partidaId}/{rolSeleccionado}");
+    }
+}
